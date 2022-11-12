@@ -7,6 +7,19 @@ User = get_user_model()
 
 class Tag(models.Model):
     """ Модель тэгов созданных рецептов. """
+    BLUE = '#0000FF'
+    ORANGE = '#FFA500'
+    GREEN = '#008000'
+    PURPLE = '#800080'
+    YELLOW = '#FFFF00'
+
+    COLOR_CHOICES = [
+        (BLUE, 'Синий'),
+        (ORANGE, 'Оранжевый'),
+        (GREEN, 'Зеленый'),
+        (PURPLE, 'Фиолетовый'),
+        (YELLOW, 'Желтый'),
+    ]
 
     name = models.CharField(
         verbose_name='Название',
@@ -15,14 +28,10 @@ class Tag(models.Model):
         db_index=True,
         help_text='Введите название тэга',
     )
-    color = models.CharField(
-        max_length=7,
-        verbose_name='Цветовой HEX-код',
-        validators=[RegexValidator(regex=r'^#([A-Fa-f0-9]{6})$')],
-        unique=True,
-    )
+    color = models.CharField(max_length=7, unique=True, choices=COLOR_CHOICES,
+                             verbose_name='Цвет в HEX')
     slug = models.SlugField(
-        max_length=20,
+        max_length=200,
         unique=True,
     )
 
@@ -38,8 +47,8 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     """ Модель ингредиентов для рецептов."""
     name = models.CharField(
-        max_length=200,
         verbose_name='Название',
+        max_length=200,
         help_text='Введите название ингредиента',
     )
     measurement_unit = models.CharField(
@@ -165,11 +174,11 @@ class Favorite(models.Model):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=['user', 'recipe'], name='favorite_user_recept_unique'
-            )
-        ]
+            ),
+        )
 
     def __str__(self):
         return f'Рецепт {self.recipe} в избранном у {self.user}'
@@ -196,11 +205,11 @@ class Follow(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=['user', 'author'], name='follow_unique'
-            )
-        ]
+            ),
+        )
 
     def __str__(self):
         return f'{self.user} подписан на {self.author}'
@@ -228,11 +237,11 @@ class Purchase(models.Model):
         ordering = ('-date_added',)
         verbose_name = 'Покупка'
         verbose_name_plural = 'Покупки'
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=['user', 'recipe'], name='purchase_user_recipe_unique'
-            )
-        ]
+            ),
+        )
 
     def __str__(self):
         return f'Рецепт {self.recipe} в списке покупок {self.user}'
