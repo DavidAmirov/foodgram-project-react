@@ -1,5 +1,7 @@
 from django.http.response import HttpResponse
-from django.db.models import Sum
+from django.db.models import F, Sum
+from django.template.loader import render_to_string
+from weasyprint import HTML
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -107,11 +109,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def recipe_delete_method(self, request, AnyModel, pk):
+    def recipe_delete_method(self, request, any_model, pk):
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
         favorites = get_object_or_404(
-            AnyModel, user=user, recipe=recipe
+            any_model, user=user, recipe=recipe
         )
         favorites.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -141,18 +143,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'],
             permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
-        queryset = self.get_queryset()
-        cart_objects = Purchase.objects.filter(user=request.user)
-        recipes = queryset.filter(purchases__in=cart_objects)
-        ingredients = AmountIngredient.objects.filter(recipes__in=recipes)
-        ing_types = Ingredient.objects.filter(
-            ingredients_amount__in=ingredients
-        ).annotate(total=Sum('ingredients_amount__amount'))
-
-        lines = [f'{ing_type.name}, {ing_type.total}'
-                 f' {ing_type.measurement_unit}' for ing_type in ing_types]
-        filename = 'shopping_ingredients.txt'
-        response_content = '\n'.join(lines)
-        response = HttpResponse(response_content, content_type='text/plain')
-        response['Content-Disposition'] = f'attachment; filename={filename}'
+        shopping_list = AmountIngredient.objects.filter(
+            recipe__purchase__user=request.user
+        ).values(
+            name=F('ingredient__name'),
+            measurement_unit=F('ingredient__measurement_unit')
+        ).annotate(amount=Sum('amount')).values_list(
+            'ingredient__name', 'amount', 'ingredient__measurement_unit'
+        )
+        html_template = render_to_string('recipes/pdf_template.html',
+                                         {'ingredients': shopping_list})
+        html = HTML(string=html_template)
+        result = html.write_pdf()
+        response = HttpResponse(result, content_type='application/pdf;')
+        response['Content-Disposition'] = 'inline; filename=shopping_list.pdf'
+        response['Content-Transfer-Encoding'] = 'binary'
         return response

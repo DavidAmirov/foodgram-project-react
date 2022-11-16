@@ -132,25 +132,34 @@ class AmountIngredient(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        verbose_name='Ингредиент',
-        related_name='ingredients_amount',
+        verbose_name='Ингредиенты рецепта'
     )
-    amount = models.PositiveIntegerField(
-        verbose_name='Количество ингредиента',
-        default=0,
-        validators=(
-            MinValueValidator(
-                1, 'Слишком малое количество ингредиента.'
-            ),
-        ),
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт'
+    )
+    amount = models.IntegerField(
+        default=1,
+        validators=[MinValueValidator(1)],
+        verbose_name='Количество ингредиента'
     )
 
     class Meta:
-        verbose_name = 'Количество ингредиента'
-        verbose_name_plural = 'Количество ингредиентов'
+        default_related_name = 'ingridients_recipe'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('recipe', 'ingredient',),
+                name='recipe_ingredient_exists'),
+            models.CheckConstraint(
+                check=models.Q(amount__gte=1),
+                name='amount_gte_1'),
+        )
+        verbose_name = 'Ингредиент в рецепте'
+        verbose_name_plural = 'Ингредиенты в рецепте'
 
     def __str__(self):
-        return f'{self.amount} {self.ingredient}'
+        return f'{self.recipe}: {self.ingredient} – {self.amount}'
 
 
 class Favorite(models.Model):
