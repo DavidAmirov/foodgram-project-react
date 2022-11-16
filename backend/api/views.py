@@ -93,7 +93,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         return serializer.save(author=self.request.user)
 
-    def recipe_post_method(self, request, AnySerializer, pk):
+    def recipe_post_method(self, request, any_serializer, pk):
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
 
@@ -101,7 +101,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'user': user.id,
             'recipe': recipe.id,
         }
-        serializer = AnySerializer(
+        serializer = any_serializer(
             data=data,
             context={'request': request}
         )
@@ -148,8 +148,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).values(
             name=F('ingredient__name'),
             measurement_unit=F('ingredient__measurement_unit')
-        ).annotate(amount=Sum('amount')).values_list(
-            'ingredient__name', 'amount', 'ingredient__measurement_unit'
+        ).annotate(сount=Sum('amount')).values_list(
+            'ingredient__name', 'сount', 'ingredient__measurement_unit'
         )
         html_template = render_to_string('recipes/pdf_template.html',
                                          {'ingredients': shopping_list})
