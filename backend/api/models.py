@@ -89,7 +89,7 @@ class Recipe(models.Model):
         help_text='Введите описание рецепта',
     )
     ingredients = models.ManyToManyField(
-        'AmountIngredient',
+        'Ingredient',
         related_name='recipes',
         verbose_name='Ингредиенты',
         help_text='Выберите ингредиенты для рецепта',
