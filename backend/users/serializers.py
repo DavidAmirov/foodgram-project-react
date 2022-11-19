@@ -1,29 +1,42 @@
-from django.contrib.auth import get_user_model
-from djoser.conf import settings
-from djoser.serializers import (SetPasswordSerializer, UserCreateSerializer,
-                                UserSerializer)
+from djoser.serializers import UserCreateSerializer, UserSerializer
+from rest_framework import serializers
 
-User = get_user_model()
-
-
-class CustomUserSerializer(UserSerializer):
-    class Meta:
-        model = User
-        fields = (settings.LOGIN_FIELD, settings.USER_ID_FIELD
-                  ) + tuple(User.REQUIRED_FIELDS)
-        read_only_fields = (settings.LOGIN_FIELD,)
+from .models import CustomUser
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
 
     class Meta:
-        model = User
-        fields = (settings.LOGIN_FIELD,
-                  settings.USER_ID_FIELD,
-                  "password",
-                  ) + tuple(User.REQUIRED_FIELDS)
+        model = CustomUser
+        fields = (
+            'id',
+            'username',
+            'email',
+            'password',
+            'first_name',
+            'last_name',
+        )
 
 
-class CustomSetPasswordSerializer(SetPasswordSerializer):
+class CustomUserSerializer(UserSerializer):
+    is_subscribed = serializers.SerializerMethodField(
+        read_only=True,
+        source='get_is_subscribed'
+    )
+
     class Meta:
-        fields = ('password',)
+        model = CustomUser
+        fields = (
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+        )
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        return request.user.follower.filter(author=obj).exists()
