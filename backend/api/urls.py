@@ -8,7 +8,6 @@ app_name = 'api'
 
 router = DefaultRouter()
 
-router.register('users', CustomUserViewSet, basename='users')
 router.register('tags', TagsViewSet, basename='tags')
 router.register('ingredients', IngredientsViewSet, basename='ingredients')
 router.register('recipes', RecipesViewSet, basename='recipes')

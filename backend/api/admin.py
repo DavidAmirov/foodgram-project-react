@@ -1,12 +1,12 @@
 from django.contrib import admin
 from users.mixins import DisplayEmptyFieldMixin
 
-from .models import (Favorite, Ingredient, AmountIngredient, Recipe,
+from .models import (Favorites, Ingredient, IngredientInRecipe, Recipe,
                      ShoppingCart, Tag, TagInRecipe)
 
 
 class IngredientInRecipeInline(admin.TabularInline):
-    model = AmountIngredient
+    model = IngredientInRecipe
     extra = 1
 
 
@@ -50,7 +50,7 @@ class RecipeAdmin(DisplayEmptyFieldMixin, admin.ModelAdmin):
         return obj.favorite_recipe.count()
 
 
-@admin.register(Favorite)
+@admin.register(Favorites)
 class FavoritesAdmin(DisplayEmptyFieldMixin, admin.ModelAdmin):
     list_display = ('user', 'recipe',)
     search_fields = ('user',)
