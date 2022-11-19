@@ -25,12 +25,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'api',
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
     'django_filters',
-    'users',
+    'colorfield',
+    'api.apps.ApiConfig',
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -45,10 +46,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'foodgram.urls'
 
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [TEMPLATES_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -145,12 +148,15 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
-    'PASSWORD_RESET_CONFIRM_URL': 'users/reset_password/{uid}/{token}',
-    'USERNAME_RESET_CONFIRM_URL': 'users/reset_email/{uid}/{token}',
-    'ACTIVATION_URL': 'users/activation/{uid}/{token}',
+    'SEND_ACTIVATION_EMAIL': False,
+    'HIDE_USERS': False,
     'SERIALIZERS': {
         'user': 'users.serializers.CustomUserSerializer',
         'user_create': 'users.serializers.CustomUserCreateSerializer',
-        'set_password': 'users.serializers.CustomSetPasswordSerializer',
+        'current_user': 'users.serializers.CustomUserSerializer',
+    },
+    'PERMISSIONS': {
+        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+        'user_list': ['rest_framework.permissions.AllowAny'],
     },
 }
