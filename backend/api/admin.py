@@ -1,48 +1,64 @@
 from django.contrib import admin
+from users.mixins import DisplayEmptyFieldMixin
 
-from .models import (Favorite, Follow, Ingredient, AmountIngredient,
-                     Purchase, Recipe, Tag)
-
-
-class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'measurement_unit')
-    search_fields = ('^name',)
+from .models import (Favorite, Ingredient, AmountIngredient, Recipe,
+                     ShoppingCart, Tag, TagInRecipe)
 
 
-class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('author', 'name', 'favorited')
-    list_filter = ('author', 'name', 'tags')
-
-    def favorited(self, obj):
-        return Favorite.objects.filter(recipe=obj).count()
-
-    favorited.short_description = 'В избранном'
+class IngredientInRecipeInline(admin.TabularInline):
+    model = AmountIngredient
+    extra = 1
 
 
-class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'color', 'slug')
+class TagInRecipeInline(admin.TabularInline):
+    model = TagInRecipe
+    extra = 1
 
 
-class PurchaseAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe')
+@admin.register(Ingredient)
+class IngredientAdmin(DisplayEmptyFieldMixin, admin.ModelAdmin):
+    list_display = ('name', 'measurement_unit',)
+    search_fields = ('name',)
+    list_filter = ('measurement_unit',)
 
 
-class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe')
+@admin.register(Tag)
+class TagAdmin(DisplayEmptyFieldMixin, admin.ModelAdmin):
+    list_display = ('name', 'color', 'slug',)
+    search_fields = ('name',)
+    list_filter = ('name',)
 
 
-class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('author', 'user')
+@admin.register(Recipe)
+class RecipeAdmin(DisplayEmptyFieldMixin, admin.ModelAdmin):
+    list_display = (
+        'id',
+        'author',
+        'name',
+        'text',
+        'cooking_time',
+        'pub_date',
+        'count_favorite'
+    )
+    search_fields = ('author__username', 'name',)
+    list_filter = ('name', 'author', 'tags',)
+    readonly_fields = ('count_favorite',)
+    inlines = (IngredientInRecipeInline, TagInRecipeInline)
+    exclude = ('tags', 'ingredients')
+
+    def count_favorite(self, obj):
+        return obj.favorite_recipe.count()
 
 
-class RecipeIngredientAdmin(admin.ModelAdmin):
-    list_display = ('ingredient', 'amount', 'recipe')
+@admin.register(Favorite)
+class FavoritesAdmin(DisplayEmptyFieldMixin, admin.ModelAdmin):
+    list_display = ('user', 'recipe',)
+    search_fields = ('user',)
+    list_filter = ('user',)
 
 
-admin.site.register(Ingredient, IngredientAdmin)
-admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(Tag, TagAdmin)
-admin.site.register(Purchase, PurchaseAdmin)
-admin.site.register(Favorite, FavoriteAdmin)
-admin.site.register(Follow, SubscriptionAdmin)
-admin.site.register(AmountIngredient)
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(DisplayEmptyFieldMixin, admin.ModelAdmin):
+    list_display = ('user', 'recipe',)
+    search_fields = ('user',)
+    list_filter = ('user',)
