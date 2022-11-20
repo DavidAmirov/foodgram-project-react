@@ -42,3 +42,5 @@ docker exec -it backend python manage.py createsuperuser
 ### Проект запущен и доступен по 51.250.18.62
 
 ### Автор: Амиров Давид.
+
+### superuser login: admin@mail.ru   password: David1999
